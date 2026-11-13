@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Diet & Calorie Tracker</title>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #e8f5e9;
+            --danger: #d32f2f;
+            --bg: #f4f7f6;
+            --card: #ffffff;
+            --text: #333333;
+            --muted: #666666;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 6px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        /* Summary Grid */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-box {
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--bg);
+        }
+
+        .stat-box h3 {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .stat-box p {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .over-limit {
+            color: var(--danger);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 14px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 14px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary);
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        /* Goal Input */
+        .goal-control {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: flex-end;
+            font-size: 0.9rem;
+        }
+
+        .goal-control input {
+            width: 90px;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        /* Form Styling */
+        .food-form {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 10px;
+        }
+
+        input, select, button {
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: #757575;
+            font-size: 0.85rem;
+            padding: 6px 12px;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            padding: 6px 10px;
+            font-size: 0.8rem;
+        }
+
+        /* Meal List */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .meal-list {
+            list-style: none;
+        }
+
+        .meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+        .meal-item:last-child {
+            border-bottom: none;
+        }
+
+        .meal-info strong {
+            display: block;
+            font-size: 1rem;
+        }
+
+        .meal-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        .meal-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .meal-calories {
+            font-weight: 700;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: var(--muted);
+            padding: 20px 0;
+        }
+
+        @media (max-width: 550px) {
+            .food-form {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🥗 Diet & Calorie Tracker</h1>
+        <p>Log your daily meals and monitor your calorie goals</p>
+    </header>
+
+    <!-- Dashboard Summary -->
+    <div class="card">
+        <div class="summary-grid">
+            <div class="stat-box">
+                <h3>Daily Goal</h3>
+                <p id="goal-display">2000</p>
+            </div>
+            <div class="stat-box">
+                <h3>Consumed</h3>
+                <p id="consumed-display">0</p>
+            </div>
+            <div class="stat-box">
+                <h3>Remaining</h3>
+                <p id="remaining-display">2000</p>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div class="goal-control">
+            <label for="goal-input">Set Daily Goal (kcal):</label>
+            <input type="number" id="goal-input" value="2000" min="500" max="10000">
+            <button type="button" class="btn-secondary" onclick="updateGoal()">Update</button>
+        </div>
+    </div>
+
+    <!-- Add Food Form -->
+    <div class="card">
+        <form class="food-form" id="food-form">
+            <input type="text" id="food-name" placeholder="Food item (e.g., Oatmeal)" required>
+            <select id="meal-type">
+                <option value="Breakfast">Breakfast</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Dinner">Dinner</option>
+                <option value="Snack">Snack</option>
+            </select>
+            <input type="number" id="food-calories" placeholder="Calories" min="1" required>
+            <button type="submit">+ Add</button>
+        </form>
+    </div>
+
+    <!-- Logged Meals List -->
+    <div class="card">
+        <div class="list-header">
+            <h2>Today's Food Log</h2>
+            <button type="button" class="btn-danger" onclick="clearAll()">Reset Day</button>
+        </div>
+        <ul class="meal-list" id="meal-list"></ul>
+    </div>
+</div>
+
+<script>
+    // Load saved data from localStorage or use defaults
+    let dailyGoal = parseInt(localStorage.getItem('dailyGoal')) || 2000;
+    let meals = JSON.parse(localStorage.getItem('meals')) || [];
+
+    const goalInput = document.getElementById('goal-input');
+    const goalDisplay = document.getElementById('goal-display');
+    const consumedDisplay = document.getElementById('consumed-display');
+    const remainingDisplay = document.getElementById('remaining-display');
+    const progressBar = document.getElementById('progress-bar');
+    const mealList = document.getElementById('meal-list');
+    const foodForm = document.getElementById('food-form');
+
+    goalInput.value = dailyGoal;
+
+    // Handle adding a new food entry
+    foodForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const name = document.getElementById('food-name').value.trim();
+        const type = document.getElementById('meal-type').value;
+        const calories = parseInt(document.getElementById('food-calories').value);
+
+        if (!name || isNaN(calories) || calories <= 0) return;
+
+        const newMeal = {
+            id: Date.now(),
+            name: name,
+            type: type,
+            calories: calories
+        };
+
+        meals.push(newMeal);
+        saveAndRender();
+        foodForm.reset();
+    });
+
+    // Update daily calorie limit
+    function updateGoal() {
+        const newGoal = parseInt(goalInput.value);
+        if (newGoal && newGoal >= 500) {
+            dailyGoal = newGoal;
+            saveAndRender();
+        }
+    }
+
+    // Delete individual item
+    function deleteMeal(id) {
+        meals = meals.filter(meal => meal.id !== id);
+        saveAndRender();
+    }
+
+    // Reset entire day
+    function clearAll() {
+        if (confirm('Clear all logged meals for today?')) {
+            meals = [];
+            saveAndRender();
+        }
+    }
+
+    // Save to localStorage and update UI
+    function saveAndRender() {
+        localStorage.setItem('dailyGoal', dailyGoal);
+        localStorage.setItem('meals', JSON.stringify(meals));
+
+        const totalConsumed = meals.reduce((sum, item) => sum + item.calories, 0);
+        const remaining = dailyGoal - totalConsumed;
+
+        goalDisplay.textContent = `${dailyGoal} kcal`;
+        consumedDisplay.textContent = `${totalConsumed} kcal`;
+        remainingDisplay.textContent = `${remaining} kcal`;
+
+        // Highlight in red if over daily limit
+        if (remaining < 0) {
+            remainingDisplay.classList.add('over-limit');
+            progressBar.style.backgroundColor = '#d32f2f';
+        } else {
+            remainingDisplay.classList.remove('over-limit');
+            progressBar.style.backgroundColor = '#2e7d32';
+        }
+
